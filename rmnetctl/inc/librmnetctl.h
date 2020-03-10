@@ -550,6 +550,7 @@ int rtrmnet_ctl_deinit(rmnetctl_hndl_t *hndl);
  * @param error_code Status code of this operation returned from the kernel
  * @param index Index node will have
  * @param flagconfig Flag configuration device will have
+ * @param offload Offload capability
  * @return RMNETCTL_SUCCESS if successful
  * @return RMNETCTL_LIB_ERR if there was a library error. Check error_code
  * @return RMNETCTL_KERNEL_ERR if there was an error in the kernel.
@@ -558,7 +559,7 @@ int rtrmnet_ctl_deinit(rmnetctl_hndl_t *hndl);
  */
 int rtrmnet_ctl_newvnd(rmnetctl_hndl_t *hndl, char *devname, char *vndname,
 		       uint16_t *error_code, uint8_t  index,
-		       uint32_t flagconfig);
+		       uint32_t flagconfig, uint8_t offload);
 
 /* @brief Public API to delete a virtual device node
  * @details Message type is RTM_DELLINK
@@ -581,6 +582,7 @@ int rtrmnet_ctl_delvnd(rmnetctl_hndl_t *hndl, char *vndname,
  * @param vnd_name Name of virtual device to be changed
  * @param error_code Status code of this operation returned from the kernel
  * @param flagconfig New flag config vnd should have
+ * @param offload Offload capability
  * @return RMNETCTL_SUCCESS if successful
  * @return RMNETCTL_LIB_ERR if there was a library error. Check error_code
  * @return RMNETCTL_KERNEL_ERR if there was an error in the kernel.
@@ -589,7 +591,7 @@ int rtrmnet_ctl_delvnd(rmnetctl_hndl_t *hndl, char *vndname,
  */
 int rtrmnet_ctl_changevnd(rmnetctl_hndl_t *hndl, char *devname, char *vndname,
 			  uint16_t *error_code, uint8_t  index,
-			  uint32_t flagconfig);
+			  uint32_t flagconfig, uint8_t offload);
 
 /* @brief Public API to retrieve configuration of a virtual device node
  * @details Message type is RTM_GETLINK
@@ -606,6 +608,7 @@ int rtrmnet_ctl_changevnd(rmnetctl_hndl_t *hndl, char *devname, char *vndname,
  * for uplink aggregation
  * @param agg_time Where to store the value of the node's features
  * for uplink aggregation
+ * @param offload Offload capability
  * @return RMNETCTL_SUCCESS if successful
  * @return RMNETCTL_LIB_ERR if there was a library error. Check error_code
  * @return RMNETCTL_KERNEL_ERR if there was an error in the kernel.
@@ -616,7 +619,7 @@ int rtrmnet_ctl_getvnd(rmnetctl_hndl_t *hndl, char *vndname,
 		       uint16_t *error_code, uint16_t *mux_id,
 		       uint32_t *flagconfig, uint8_t *agg_count,
 		       uint16_t *agg_size, uint32_t *agg_time,
-		       uint8_t *features);
+		       uint8_t *features, uint8_t *offload);
 
 /* @brief Public API to bridge a vnd and device
  * @details Message type is RTM_NEWLINK

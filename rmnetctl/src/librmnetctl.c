@@ -110,6 +110,7 @@ enum {
 	RMNETCTL_IFLA_FLAGS,
 	RMNETCTL_IFLA_DFC_QOS,
 	RMNETCTL_IFLA_UPLINK_PARAMS,
+	RMNETCTL_IFLA_NSS_OFFLOAD,
 	__RMNETCTL_IFLA_MAX,
 };
 
@@ -1066,6 +1067,12 @@ static int rta_put(struct nlmsg *req, size_t *reqsize, int type, int len,
 	return RMNETCTL_SUCCESS;
 }
 
+static int rta_put_u8(struct nlmsg *req, size_t *reqsize, int type,
+		       uint8_t data)
+{
+	return rta_put(req, reqsize, type, sizeof(data), &data);
+}
+
 /* @brief Add an RTA to the Netlink message with a u16 data
  * @param *req The Netlink message
  * @param *reqsize The remainins space within the Netlink message
@@ -1170,7 +1177,8 @@ static struct rtattr *rta_find(struct rtattr *rta, int attrlen, uint16_t type)
  */
 static int rmnet_fill_newlink_msg(struct nlmsg *req, size_t *reqsize,
 				  unsigned int devindex, char *vndname,
-				  uint8_t index, uint32_t flagconfig)
+				  uint8_t index, uint32_t flagconfig,
+				  uint8_t offload)
 {
 	struct rtattr *linkinfo, *datainfo;
 	struct ifla_vlan_flags flags;
@@ -1211,6 +1219,10 @@ static int rmnet_fill_newlink_msg(struct nlmsg *req, size_t *reqsize,
 		if (rc != RMNETCTL_SUCCESS)
 			return rc;
 	}
+
+	rc = rta_put_u8(req, reqsize, RMNETCTL_IFLA_NSS_OFFLOAD, offload);
+	if (rc != RMNETCTL_SUCCESS)
+		return rc;
 
 	rta_nested_end(req, datainfo);
 	rta_nested_end(req, linkinfo);
@@ -1388,7 +1400,7 @@ int rtrmnet_ctl_deinit(rmnetctl_hndl_t *hndl)
 
 int rtrmnet_ctl_newvnd(rmnetctl_hndl_t *hndl, char *devname, char *vndname,
 		       uint16_t *error_code, uint8_t  index,
-		       uint32_t flagconfig)
+		       uint32_t flagconfig, uint8_t offload)
 {
 	unsigned int devindex = 0;
 	struct nlmsg req;
@@ -1422,7 +1434,7 @@ int rtrmnet_ctl_newvnd(rmnetctl_hndl_t *hndl, char *devname, char *vndname,
 		return rc;
 
 	rc = rmnet_fill_newlink_msg(&req, &reqsize, devindex, vndname, index,
-				    flagconfig);
+				    flagconfig, offload);
 	if (rc != RMNETCTL_SUCCESS)
 		return rc;
 
@@ -1470,7 +1482,7 @@ int rtrmnet_ctl_delvnd(rmnetctl_hndl_t *hndl, char *vndname,
 
 int rtrmnet_ctl_changevnd(rmnetctl_hndl_t *hndl, char *devname, char *vndname,
 			  uint16_t *error_code, uint8_t  index,
-			  uint32_t flagconfig)
+			  uint32_t flagconfig, uint8_t offload)
 {
 	struct nlmsg req;
 	unsigned int devindex = 0;
@@ -1498,7 +1510,7 @@ int rtrmnet_ctl_changevnd(rmnetctl_hndl_t *hndl, char *devname, char *vndname,
 	}
 
 	rc = rmnet_fill_newlink_msg(&req, &reqsize, devindex, vndname, index,
-				    flagconfig);
+				    flagconfig, offload);
 	if (rc != RMNETCTL_SUCCESS) {
 		*error_code = RMNETCTL_API_ERR_RTA_FAILURE;
 		return rc;
@@ -1516,7 +1528,7 @@ int rtrmnet_ctl_getvnd(rmnetctl_hndl_t *hndl, char *vndname,
 		       uint16_t *error_code, uint16_t *mux_id,
 		       uint32_t *flagconfig, uint8_t *agg_count,
 		       uint16_t *agg_size, uint32_t *agg_time,
-		       uint8_t *features)
+		       uint8_t *features, uint8_t *offload)
 {
 	struct nlmsg req;
 	struct nlmsghdr *resp;
@@ -1618,6 +1630,8 @@ int rtrmnet_ctl_getvnd(rmnetctl_hndl_t *hndl, char *vndname,
 		if (agg_time)
 			*agg_time = ul_agg->time_limit;
 	}
+	if (tb[RMNETCTL_IFLA_NSS_OFFLOAD] && offload)
+		*offload = *((uint8_t *)RTA_DATA(tb[RMNETCTL_IFLA_NSS_OFFLOAD]));
 
 	free(resp);
 	return RMNETCTL_API_SUCCESS;

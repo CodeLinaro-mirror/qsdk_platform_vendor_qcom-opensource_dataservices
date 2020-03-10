@@ -350,27 +350,35 @@ static int rmnet_api_call(int argc, char *argv[])
 			_RMNETCLI_CHECKNULL(argv[1]);
 			_RMNETCLI_CHECKNULL(argv[2]);
 			_RMNETCLI_CHECKNULL(argv[3]);
+
+			uint8_t offload = 0;
 			uint32_t flags = 0;
 			/* If optional flag was used pass it on*/
 			if (argv[4])
 				flags = _STRTOI32(argv[4]);
 
+			if (argv[5])
+				offload = _STRTOUI8(argv[5]);
+
 			return_code = rtrmnet_ctl_newvnd(handle, argv[1],
 							 argv[2],
 							 &error_number,
 							 _STRTOI32(argv[3]),
-							 flags);
+							 flags,
+							 offload);
 		} else if (!strcmp(*argv, "changelink")) {
 			_RMNETCLI_CHECKNULL(argv[1]);
 			_RMNETCLI_CHECKNULL(argv[2]);
 			_RMNETCLI_CHECKNULL(argv[3]);
 			_RMNETCLI_CHECKNULL(argv[4]);
+			_RMNETCLI_CHECKNULL(argv[5]);
 
 			return_code = rtrmnet_ctl_changevnd(handle, argv[1],
 							    argv[2],
 							    &error_number,
 							    _STRTOI32(argv[3]),
-							    _STRTOI32(argv[4]));
+							    _STRTOI32(argv[4]),
+							    _STRTOUI8(argv[5]));
 		} else if (!strcmp(*argv, "getlink")) {
 			_RMNETCLI_CHECKNULL(argv[1]);
 			uint32_t flags = 0;
@@ -379,12 +387,14 @@ static int rmnet_api_call(int argc, char *argv[])
 			uint16_t agg_size = 0;
 			uint32_t agg_time = 0;
 			uint8_t features = 0;
+			uint8_t offload = 0;
 
 			return_code = rtrmnet_ctl_getvnd(handle, argv[1],
 							 &error_number,
 							 &mux_id, &flags,
 							 &agg_count, &agg_size,
-							 &agg_time, &features);
+							 &agg_time, &features,
+							 &offload);
 			if (return_code == RMNETCTL_API_SUCCESS) {
 				printf("Configuration for device %s:\n", argv[1]);
 				printf("\tMux id: %d\n", mux_id);
@@ -394,6 +404,7 @@ static int rmnet_api_call(int argc, char *argv[])
 				printf("\t\tByte limit: %d\n", agg_size);
 				printf("\t\tTime limit (ns): %d\n", agg_time);
 				printf("\t\tFeatures : 0x%02x\n", features);
+				printf("\tOffload : 0x%02x\n", offload);
 			}
 		} else if (!strcmp(*argv, "dellink")) {
 			_RMNETCLI_CHECKNULL(argv[1]);
