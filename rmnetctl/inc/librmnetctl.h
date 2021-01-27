@@ -2,7 +2,8 @@
 
 			  L I B R M N E T C T L . H
 
-Copyright (c) 2013-2015, 2018, 2020 The Linux Foundation. All rights reserved.
+Copyright (c) 2013-2015, 2018, 2020-2021
+The Linux Foundation. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions are
@@ -142,6 +143,7 @@ enum rmnetctl_error_codes_e {
 /*!
 * @brief Contains a list of error message from API
 */
+#ifndef RMNETCTL_NO_ERR_CODE
 char rmnetctl_error_code_text
 [RMNETCTL_API_ERR_ENUM_LENGTH][RMNETCTL_ERR_MSG_SIZE] = {
 	"ERROR: API succeeded\n",
@@ -172,6 +174,32 @@ char rmnetctl_error_code_text
 	"ERROR: TC handle is full\n",
 	/* New Rmnet Driver Errors */
 	"ERROR: Netlink message is too small to hold all data\n",
+};
+#endif /* RMNETCTL_NO_ERR_CODE */
+
+#define RMNETCTL_FILTER_MASK_SADDR 0x1
+#define RMNETCTL_FILTER_MASK_DADDR 0x2
+#define RMNETCTL_FILTER_MASK_SPORT 0x4
+#define RMNETCTL_FILTER_MASK_DPORT 0x8
+#define RMNETCTL_FILTER_MASK_PROTO 0x10
+#define RMNETCTL_FILTER_MASK_TOS   0x20
+
+struct rmnetctl_filter {
+	uint32_t saddr[4];
+	uint32_t smask[4];
+	uint32_t daddr[4];
+	uint32_t dmask[4];
+	uint16_t sport;
+	uint16_t sport_range;
+	uint16_t dport;
+	uint16_t dport_range;
+	uint16_t precedence;
+	uint8_t tos;
+	uint8_t tos_mask;
+	uint8_t xport_protocol;
+	uint8_t filter_mask;
+	uint8_t pad1;
+	uint8_t pad2;
 };
 
 /*===========================================================================
@@ -825,6 +853,52 @@ int rtrmnet_set_wda_freq(rmnetctl_hndl_t *hndl,
 			 char *vndname,
 			 uint32_t freq,
 			 uint16_t *error_code);
+
+/* @brief Public API to add filter for a flow
+ * used by the RmNet driver
+ * @details Message type is RMN_NEWLINK
+ * @param hndl RmNet handle for the Netlink message
+ * @param devname Name of device node is connected to
+ * @param vndname Name of virtual device
+ * @param flow_id Flow information
+ * @param ip_type IP family
+ * @param filter RMNETCTL filter
+ * @param error_code Status code of this operation returned from the kernel
+ * @return RMNETCTL_SUCCESS if successful
+ * @return RMENTCTL_LIB_ERR if there was a library error. Check error_code
+ * @return RMNETCTL_KERNEL_ERR if there was an error in the kernel.
+ * Check error_code
+ * @return RMNETCTL_INVALID_ARG if invalid arguments were passed to the API
+ */
+int rtrmnet_add_filter(rmnetctl_hndl_t *hndl,
+		       char *devname,
+		       char *vndname,
+		       uint32_t flow_id,
+		       int ip_type,
+		       struct rmnetctl_filter *filter,
+		       uint16_t *error_code);
+
+/* @brief Public API to delete filters for a flow
+ * used by the RmNet driver
+ * @details Message type is RMN_NEWLINK
+ * @param hndl RmNet handle for the Netlink message
+ * @param devname Name of device node is connected to
+ * @param vndname Name of virtual device
+ * @param flow_id Flow information
+ * @param ip_type IP family
+ * @param error_code Status code of this operation returned from the kernel
+ * @return RMNETCTL_SUCCESS if successful
+ * @return RMENTCTL_LIB_ERR if there was a library error. Check error_code
+ * @return RMNETCTL_KERNEL_ERR if there was an error in the kernel.
+ * Check error_code
+ * @return RMNETCTL_INVALID_ARG if invalid arguments were passed to the API
+ */
+int rtrmnet_remove_filters(rmnetctl_hndl_t *hndl,
+			   char *devname,
+			   char *vndname,
+			   uint32_t flow_id,
+			   int ip_type,
+			   uint16_t *error_code);
 
 #endif /* not defined LIBRMNETCTL_H */
 
